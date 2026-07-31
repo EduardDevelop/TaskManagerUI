@@ -1,0 +1,45 @@
+<section class="filters" aria-labelledby="filters-title">
+  <h2 id="filters-title">Buscar y filtrar</h2>
+  <div class="filter-grid">
+    <mat-form-field appearance="outline">
+      <mat-label>Nombre o título</mat-label>
+      <input matInput id="task-search" type="search" [(ngModel)]="searchTerm" (ngModelChange)="emit()" placeholder="Buscar tarea" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Estado</mat-label>
+      <mat-select id="task-filter-status" [(ngModel)]="status" (selectionChange)="emit()">
+        <mat-option value="all">Todos</mat-option>
+        <mat-option *ngFor="let item of statuses" [value]="item">{{ statusLabel(item) }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Creada desde</mat-label>
+      <input matInput [matDatepicker]="createdFromPicker" [ngModel]="createdFromDate" (dateChange)="setCreatedFrom($event.value)" readonly />
+      <mat-datepicker-toggle matIconSuffix [for]="createdFromPicker"></mat-datepicker-toggle>
+      <mat-datepicker #createdFromPicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Creada hasta</mat-label>
+      <input matInput [matDatepicker]="createdToPicker" [ngModel]="createdToDate" (dateChange)="setCreatedTo($event.value)" readonly />
+      <mat-datepicker-toggle matIconSuffix [for]="createdToPicker"></mat-datepicker-toggle>
+      <mat-datepicker #createdToPicker></mat-datepicker>
+      <mat-error *ngIf="invalidRange">La fecha inicial no puede ser posterior a la fecha final.</mat-error>
+    </mat-form-field>
+
+    <button mat-flat-button type="button" class="clear-button" (click)="clear()" [disabled]="!hasActiveFilters">
+      Limpiar filtros
+    </button>
+  </div>
+
+  <mat-chip-set *ngIf="hasActiveFilters && !invalidRange" class="active-filter-summary" aria-label="Filtros activos">
+    <mat-chip *ngIf="searchTerm.trim()">Nombre: {{ searchTerm.trim() }}</mat-chip>
+    <mat-chip *ngIf="status !== 'all'">Estado: {{ selectedStatusLabel() }}</mat-chip>
+    <mat-chip *ngIf="createdFrom">Desde: {{ createdFrom }}</mat-chip>
+    <mat-chip *ngIf="createdTo">Hasta: {{ createdTo }}</mat-chip>
+  </mat-chip-set>
+
+  <p *ngIf="invalidRange" class="filter-error" role="alert">Corrige el rango de fechas para mostrar resultados.</p>
+</section>

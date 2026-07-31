@@ -1,0 +1,47 @@
+<section class="task-board" aria-labelledby="board-title">
+  <div class="board-header">
+    <h2 id="board-title">Tareas</h2>
+
+    <p class="board-hint">Arrastra las tareas para cambiar su estado.</p><br/>
+    <p *ngIf="filtered && !loading" class="board-hint">Mostrando resultados filtrados</p>
+  </div>
+
+  <p *ngIf="loading" class="loading" aria-live="polite">Cargando tareas...</p>
+
+  <div *ngIf="!loading && tasks.length === 0" class="empty-state">
+    {{ filtered ? 'No hay tareas que coincidan con los filtros.' : 'Aún no hay tareas. Crea la primera para empezar.' }}
+  </div>
+
+  <div *ngIf="!loading" class="board-columns" aria-label="Tablero de tareas por estado">
+    <section *ngFor="let status of columns; trackBy: trackByStatus" class="board-column" [attr.aria-labelledby]="columnId(status) + '-title'">
+      <header class="column-header">
+        <h3 [id]="columnId(status) + '-title'">{{ labels[status] }}</h3>
+        <span class="column-count" [attr.aria-label]="tasksFor(status).length + ' tareas'">{{ tasksFor(status).length }}</span>
+      </header>
+
+      <div
+        class="column-dropzone"
+        cdkDropList
+        [id]="columnId(status)"
+        [cdkDropListData]="status"
+        [cdkDropListConnectedTo]="connectedColumnIds(status)"
+        (cdkDropListDropped)="drop($event)"
+      >
+        <p *ngIf="tasksFor(status).length === 0" class="column-empty">Sin tareas en este estado</p>
+
+        <app-task-card
+          *ngFor="let task of tasksFor(status); trackBy: trackByTask"
+          cdkDrag
+          [cdkDragData]="task"
+          [cdkDragDisabled]="isBusy(task)"
+          [class.card-busy]="isBusy(task)"
+          [task]="task"
+          [busy]="isBusy(task)"
+          (edit)="edit.emit($event)"
+          (remove)="remove.emit($event)"
+          (keyboardStatusChange)="statusMove.emit({ task: task, fromStatus: task.status, toStatus: $event })"
+        ></app-task-card>
+      </div>
+    </section>
+  </div>
+</section>

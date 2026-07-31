@@ -2,6 +2,7 @@
 
 # Compiled output
 /dist
+/build
 /tmp
 /out-tsc
 /bazel-out
@@ -10,6 +11,8 @@
 /node_modules
 npm-debug.log
 yarn-error.log
+*.log
+.env*
 
 # IDEs and editors
 .idea/

@@ -1,0 +1,377 @@
+<!--
+Sync Impact Report
+- Version change: template → 1.0.0
+- Modified principles: none; this is the initial project constitution
+- Added sections: Core Principles, Required User Flows, Edge Cases, Non-Goals,
+  Implementation Priorities, Definition of Done, Quality Gates
+- Removed sections: template placeholders and example guidance
+- Follow-up TODOs: none
+-->
+
+# Task Management Frontend Constitution
+
+## Purpose
+
+This constitution defines the mandatory architectural, technical, quality, and
+user-experience principles for the Angular frontend of the Task Management
+application.
+
+The frontend is responsible for providing an intuitive, maintainable,
+responsive, and robust interface that consumes the Task Management REST API.
+
+All specifications, implementation plans, tasks, and code changes generated for
+the frontend MUST comply with this constitution.
+
+The frontend scope includes:
+
+- Listing tasks.
+- Creating tasks.
+- Editing tasks.
+- Deleting tasks.
+- Changing task status.
+- Handling loading, success, empty, and error states.
+- Communicating with the backend REST API.
+- Validating user input.
+- Providing a responsive and accessible user experience.
+
+Backend implementation, database design, controllers, middleware, and
+server-side architecture are outside the scope of this constitution.
+
+---
+
+## Core Principles
+
+### I. Feature-Oriented Architecture
+
+The application MUST use a feature-oriented architecture centered on the
+task-management domain. Task-related components, services, models, state, and
+utilities MUST be grouped within a dedicated feature. Reusable generic UI
+components MUST be placed in `shared`; global singleton services and
+interceptors MUST be placed in `core`; and components MUST NOT be organized
+only by technical type at the application root. Circular dependencies MUST
+NOT be introduced, and files and folders MUST use consistent Angular naming
+conventions.
+
+Rationale: A feature-oriented structure improves discoverability,
+maintainability, scalability, and isolation of business functionality.
+
+### II. Smart and Presentational Component Separation
+
+The frontend MUST separate orchestration responsibilities from presentation
+responsibilities. Container components request data, coordinate state, manage
+loading and error states, coordinate forms and mutations, and communicate with
+children. Presentational components render typed inputs, emit typed outputs,
+display forms and validation messages, and remain independent from API details.
+Presentational components MUST NOT inject `HttpClient`, call API services, or
+contain application orchestration logic. Components MUST have a single, clear
+responsibility.
+
+Rationale: This separation improves testability, reusability, readability, and
+component communication.
+
+### III. Exclusive API Access Through Angular Services
+
+All backend communication MUST occur through dedicated Angular services using
+`HttpClient`. Services MUST expose typed Observable operations equivalent to
+getting, creating, updating, and deleting tasks. Components MUST NOT inject
+`HttpClient`, API URLs MUST NOT be hardcoded across components, and the API base
+URL MUST come from Angular environment configuration. HTTP methods MUST follow
+the backend contract: `GET` for retrieval, `POST` for creation, `PUT` for
+updates, and `DELETE` for deletion. Services MUST remain focused on backend
+communication and MUST NOT contain presentation logic.
+
+Rationale: A centralized service layer prevents duplicated HTTP logic and
+isolates backend contract changes from the user interface.
+
+### IV. Strong TypeScript Typing
+
+All application data MUST use explicit TypeScript types. The use of `any` is
+prohibited except for an unavoidable untyped third-party API with a documented
+justification. API requests and responses, component inputs and outputs, HTTP
+errors, and finite domain values MUST be typed. Reactive forms SHOULD use typed
+forms, public methods SHOULD declare return types, and type assertions MUST NOT
+hide unresolved type errors.
+
+The task domain MUST define typed contracts equivalent to `Task`,
+`CreateTaskRequest`, `UpdateTaskRequest`, and the status union
+`pending | in_progress | done`.
+
+Rationale: Strong typing detects defects during development and makes API
+contracts easier to understand and maintain.
+
+### V. Task Domain Integrity
+
+The frontend MUST represent and enforce the task domain rules. A task has a
+unique identifier, a required title of 1 to 100 characters, an optional
+description of at most 500 characters, a supported status, and creation and
+modification timestamps. Titles MUST be trimmed before submission; blank titles
+MUST be invalid; descriptions MUST respect their limit; and unsupported status
+values MUST never be sent. API data MUST NOT be mutated directly, updates MUST
+preserve required API fields, and backend-generated properties MUST NOT be
+manually generated by the frontend unless explicitly required by a mock.
+
+Rationale: The UI must prevent avoidable invalid requests while respecting the
+backend as the final source of truth.
+
+### VI. Reactive Forms and Validation
+
+All task creation and editing forms MUST use Angular Reactive Forms.
+Template-driven forms MUST NOT be used for core task operations. Validators
+MUST be defined at form construction time: title uses required, meaningful
+content, and `maxLength(100)` validation; description uses `maxLength(500)`;
+and status is required and restricted to valid statuses. Invalid forms MUST
+NOT trigger HTTP requests, duplicate submissions MUST be prevented, and server
+validation errors MUST be shown without removing client validation. Create and
+edit flows SHOULD reuse the same form component when practical.
+
+Rationale: Reactive Forms provide predictable validation, typed state
+management, and improved unit testability.
+
+### VII. Observable and RxJS Discipline
+
+Asynchronous workflows MUST use Observables and appropriate RxJS operators.
+Nested subscriptions MUST be avoided, request streams MUST handle success,
+errors, and loading completion, and long-lived subscriptions MUST be cleaned up
+with an accepted Angular pattern such as `takeUntilDestroyed`, `DestroyRef`, or
+the `async` pipe. Side effects SHOULD be isolated from transformations, and
+status updates and submissions MUST prevent accidental concurrent requests.
+
+Rationale: Disciplined RxJS usage prevents memory leaks, race conditions,
+nested callbacks, and inconsistent UI state.
+
+### VIII. State Management Simplicity
+
+State management MUST remain proportional to the technical assessment. The
+application MAY use component state, Angular signals, or RxJS service state,
+but MUST NOT introduce a third-party global state library without a
+demonstrated need. The task list MUST have a single authoritative source,
+derived values SHOULD be computed, state updates MUST be immutable, and
+loading, errors, selection, editing, filters, and modal visibility MUST be
+represented explicitly.
+
+Rationale: Simple and explicit state is easier to implement, explain, test,
+and maintain within the expected development time.
+
+### IX. Robust HTTP Error Handling
+
+The frontend MUST explicitly distinguish `400`, `404`, `500`, network failure,
+timeout, and unknown errors, and MUST show safe, contextual recovery guidance.
+Raw stack traces MUST NOT be displayed. Failed create or update operations MUST
+preserve form data; failed deletes MUST keep tasks visible; failed status
+updates MUST retain or restore the previous status; and errors MUST NOT leave
+the interface loading indefinitely. A centralized interceptor or error-mapping
+utility SHOULD handle common translations.
+
+Rationale: Robust error handling prevents confusing or inconsistent UI state
+and is a core evaluation criterion.
+
+### X. Loading and Request Feedback
+
+Every user-triggered HTTP operation MUST expose visible, accessible feedback.
+Initial load, form submission, deletion, and status updates MUST have distinct
+loading states. Controls MUST be disabled when repetition could duplicate an
+operation, loading MUST reliably clear with `finalize` or an equivalent, and
+empty-state messaging MUST NOT appear while data is loading. The interface
+SHOULD prefer local indicators for single-task updates and MUST NOT be blocked
+unnecessarily.
+
+Rationale: Visible feedback explains processing and prevents duplicate actions.
+
+### XI. User Feedback and Notifications
+
+The interface MUST provide concise, friendly feedback for successful and failed
+create, update, delete, and status-change operations. Notifications MUST NOT be
+the only indicator of important state changes, MUST avoid duplicates, and
+SHOULD use a reusable notification component or service with accessible
+announcements where possible.
+
+Rationale: Consistent feedback improves usability and demonstrates complete
+handling of user interactions.
+
+### XII. Safe Deletion Flow
+
+Deleting a task MUST require explicit confirmation that identifies the task.
+Confirmation and cancellation MUST be distinct, cancellation MUST leave the
+task unchanged, and the request MUST only be sent after confirmation. Delete
+actions MUST be disabled while processing; successful deletion MUST remove or
+reload the task; and failed deletion MUST leave the task visible with an error.
+A reusable accessible modal SHOULD be used, though browser confirmation MAY be
+used for a minimal implementation.
+
+Rationale: Explicit confirmation prevents accidental data loss.
+
+### XIII. Task Status Workflow
+
+The application MUST support the lifecycle `pending` to `in_progress` to
+`done`. Users MUST be able to change status through the interface using only
+valid API values, and status changes MUST use the task update endpoint. The
+affected task MUST indicate progress, repeated updates MUST be prevented, and
+failure MUST retain or restore the previous status. The current status MUST be
+visually distinguishable without implying persistence before server
+confirmation.
+
+Rationale: The status workflow is a required business operation and must remain
+consistent with the backend enum.
+
+### XIV. Complete Task List Experience
+
+The task list MUST handle available, empty, loading, failed, retry, and
+updating/deleting states. Each task MUST display its title, optional
+description, status, and available actions. Long text MUST not break the
+interface, stable identifiers MUST be used for rendering, filtered and global
+empty states MUST be distinguishable when filtering is implemented, and the
+layout MUST work on desktop and mobile screens.
+
+Rationale: A complete list implementation accounts for real application states,
+not only the successful scenario.
+
+### XV. Search and Filtering
+
+Search and filtering MAY be implemented as optional features. When present,
+filtering MUST not mutate the original collection, searches SHOULD be
+case-insensitive and trim whitespace, active filters MUST be clearable and
+visible, and filtered empty states MUST differ from global empty states.
+Filtering MUST NOT interfere with mutations.
+
+Rationale: Search and filtering add useful functionality without unnecessary
+architectural complexity.
+
+### XVI. Environment-Based Configuration
+
+The frontend MUST obtain its API configuration from Angular environment files.
+Components MUST NOT contain absolute backend URLs, the task service MUST build
+endpoints from the configured base URL, development and production
+configurations MUST remain separable, and secrets MUST NOT be stored in
+frontend environment files. The README MUST explain how to modify the API URL.
+
+Rationale: Environment configuration prevents deployment-specific values from
+being scattered throughout the code.
+
+### XVII. Responsive and Accessible UI
+
+The application MUST remain usable on desktop and mobile screens without
+horizontal scrolling for forms and actions. Interactive elements MUST have
+descriptive accessible names and semantic HTML, form fields MUST have labels,
+validation errors SHOULD be programmatically associated, keyboard access MUST
+work, color MUST NOT be the only status or error signal, and loading and modal
+states MUST be understandable to assistive technologies.
+
+Rationale: Responsive and accessible design demonstrates professional UI
+quality and broadens usability.
+
+### XVIII. Code Quality and Maintainability
+
+Code MUST prioritize clarity, correctness, and maintainability. It MUST follow
+single responsibility, use descriptive names, keep methods cohesive, avoid
+duplicated business logic, dead code, unexplained magic values, complex
+template logic, unnecessary DOM manipulation, silent error swallowing,
+unnecessary abstractions, premature optimization, and temporary debug
+statements. Code MUST follow the Angular style guide and configured linting and
+formatting rules.
+
+Rationale: The assessment explicitly values clean code over excessive
+functionality.
+
+### XIX. Testability
+
+The architecture MUST permit unit testing without a real backend. Priority
+targets include service HTTP methods and URLs, form validation, container
+success and error flows, component inputs and outputs, status changes, delete
+confirmation, error mapping, and filtering utilities when implemented. Tests
+MUST focus on observable behavior, and HTTP tests SHOULD verify method, URL,
+body, success response, and relevant error response. Boundary tests MUST cover
+empty and whitespace titles, title limits, description limits, and invalid
+statuses. At least one meaningful service or component test SHOULD be included
+when time permits.
+
+Rationale: Testable architecture demonstrates separation of concerns and
+reduces regression risk.
+
+### XX. Documentation as a Deliverable
+
+Frontend documentation MUST be included in the repository README. It MUST
+explain Angular and Node requirements, installation and execution, frontend
+and backend URLs, environment configuration, folder structure, component
+separation, API communication, Reactive Forms, validation, error handling,
+loading and notifications, implemented functionality, extra-credit features,
+technical decisions, limitations, future improvements, and test commands.
+
+Rationale: Complete documentation ensures another developer can run and
+understand the project.
+
+---
+
+## Required User Flows
+
+The frontend MUST support complete list, create, edit, delete, and status-change
+flows. Each flow MUST provide client validation where applicable, correct REST
+operations, visible loading feedback, confirmed server state, contextual
+success or error feedback, and predictable recovery behavior. Deletion MUST
+confirm before sending a request; failed mutations MUST preserve relevant user
+or task state; and status updates MUST use `PUT /api/tasks/:id` with valid
+status values.
+
+## Edge Cases
+
+The frontend MUST account for empty lists, unavailable APIs, timeouts, tasks
+deleted by another process, rejected data, unexpected errors, whitespace-only
+titles, length limits, repeated submissions or actions, missing descriptions,
+long text, changing lists during filtering, unsaved modal closure, unsupported
+statuses, recovery after a failed list request, mutation success followed by a
+failed refresh, and all related predictable interface states.
+
+## Non-Goals
+
+Unless explicitly included as an extra feature, the frontend MUST NOT introduce
+real authentication, registration, role authorization, WebSockets, real-time
+synchronization, offline-first behavior, enterprise state libraries,
+internationalization, server-side rendering, microfrontends, advanced
+analytics, pagination for a small in-memory dataset, or complex design-system
+development. Mock authentication MAY be isolated and optional.
+
+## Implementation Priorities
+
+Development MUST prioritize project structure and configuration, typed models,
+the Angular service, listing, Reactive create and edit forms, confirmed
+deletion, status updates, error handling, loading and feedback, responsive UI,
+documentation, tests, and only then optional search, filtering, modal, or mock
+authentication features. Mandatory functionality MUST precede optional
+features.
+
+## Definition of Done
+
+A frontend feature is complete only when it complies with this constitution,
+uses typed contracts and Angular services, uses correct REST methods and
+validation, handles loading, success, failure, and relevant edge cases,
+avoids leaks and duplication, works on desktop and mobile, provides clear
+feedback, updates documentation, preserves existing functionality, and can be
+tested without significant architectural change.
+
+## Quality Gates
+
+Before delivery, the application MUST compile without TypeScript errors, run
+without runtime errors in main flows, avoid `any` in mandatory flows, perform
+no direct component HTTP calls, use Reactive Forms, reject invalid submissions
+without API calls, clear all loading states, require delete confirmation, use
+valid status values, obtain URLs from environment configuration, contain no
+unnecessary temporary files, document verified setup, communicate correctly
+with backend endpoints, handle 400, 404, 500, network, and timeout errors, and
+remain usable at common mobile and desktop widths.
+
+## Governance
+
+This constitution is the highest-priority engineering reference for the Angular
+frontend. All future specifications and implementation plans MUST be checked
+against it. Conflicts MUST be identified, their technical impact documented,
+and the simplest compliant alternative preferred. Exceptions require explicit
+justification before implementation.
+
+Amendments MUST preserve the technical assessment requirements and MUST include
+a rationale. A version MUST be incremented using semantic versioning: MAJOR for
+backward-incompatible governance or principle removals/redefinitions, MINOR for
+new principles or materially expanded guidance, and PATCH for clarifications or
+non-semantic refinements. A compliance review MUST verify affected
+specifications, plans, tasks, implementation, tests, documentation, typing,
+validation, error handling, and separation of concerns.
+
+**Version**: 1.0.0 | **Ratified**: 2026-07-30 | **Last Amended**: 2026-07-30

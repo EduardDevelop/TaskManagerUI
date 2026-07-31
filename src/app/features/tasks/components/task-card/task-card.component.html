@@ -1,0 +1,31 @@
+<article class="task-card" [class.task-card-busy]="busy">
+  <div class="task-heading">
+    <div>
+      <h3>{{ task.title }}</h3>
+      <p *ngIf="task.description" class="description">{{ task.description }}</p>
+    </div>
+    <span class="status-badge" [class.status-pending]="task.status === 'pending'" [class.status-in-progress]="task.status === 'in_progress'" [class.status-done]="task.status === 'done'">
+      {{ statusLabel(task.status) }}
+    </span>
+  </div>
+  <div class="task-meta">
+    <span>Creada: <time [attr.datetime]="task.createdAt">{{ task.createdAt | date:'mediumDate' }}</time></span>
+    <span *ngIf="task.updatedAt !== task.createdAt">Actualizada: <time [attr.datetime]="task.updatedAt">{{ task.updatedAt | date:'mediumDate' }}</time></span>
+  </div>
+  <p class="drag-help">Arrastra esta tarjeta a otra columna para cambiar su estado.</p>
+  <div class="keyboard-status" aria-label="Cambiar estado con teclado">
+    <button
+      *ngFor="let status of availableKeyboardStatuses()"
+      type="button"
+      class="btn btn-status"
+      (click)="keyboardStatusChange.emit(status)"
+      [disabled]="busy"
+    >
+      Mover a {{ statusLabel(status) }}
+    </button>
+  </div>
+  <div class="task-actions">
+    <button type="button" class="btn btn-edit" (click)="edit.emit(task)" [disabled]="busy">Editar</button>
+    <button type="button" class="btn btn-delete" (click)="remove.emit(task)" [disabled]="busy">{{ busy ? 'Guardando...' : 'Eliminar' }}</button>
+  </div>
+</article>

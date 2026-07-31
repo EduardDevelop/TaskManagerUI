@@ -1,0 +1,7 @@
+.form-panel { max-width: 42rem; margin: 0 auto; padding: 1.5rem; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); }
+form { display: grid; gap: 0.45rem; }
+input, textarea, select { width: 100%; border: 1px solid var(--color-border); border-radius: 6px; padding: 0.65rem; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.2); border-color: var(--color-primary); }
+.field-error { margin: 0 0 0.5rem; color: #991b1b; font-size: 0.85rem; }
+.form-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
+@media (max-width: 640px) { .form-actions { flex-direction: column; } .form-actions .btn { width: 100%; } }

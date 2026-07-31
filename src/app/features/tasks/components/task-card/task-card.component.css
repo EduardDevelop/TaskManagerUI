@@ -1,0 +1,11 @@
+.task-card { border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); padding: 1rem; }
+.task-card-busy { cursor: wait; }
+.task-heading { display: flex; justify-content: space-between; gap: 1rem; }
+.task-heading h3 { margin: 0; overflow-wrap: anywhere; }
+.description { margin: 0.5rem 0 0; color: var(--color-muted); overflow-wrap: anywhere; }
+.task-meta { display: flex; flex-wrap: wrap; gap: 1rem; margin: 0.9rem 0; color: var(--color-muted); font-size: 0.8rem; }
+.drag-help { margin: 0 0 0.75rem; color: var(--color-muted); font-size: 0.8rem; }
+.keyboard-status, .task-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.keyboard-status { margin-bottom: 0.75rem; }
+.keyboard-status .btn { min-height: 2rem; padding: 0.35rem 0.65rem; font-size: 0.8rem; }
+@media (max-width: 640px) { .task-heading { align-items: flex-start; flex-direction: column; } .task-actions > *, .keyboard-status > * { width: 100%; } }

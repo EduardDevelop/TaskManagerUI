@@ -1,0 +1,16 @@
+<div class="task-page">
+  <header class="page-header">
+    <div><p class="eyebrow">Task management</p><h1>Gestor de tareas</h1></div>
+    <button *ngIf="!showForm" type="button" class="btn btn-primary" (click)="openCreate()">Nueva tarea</button>
+    <button *ngIf="showForm" type="button" class="btn btn-secondary" (click)="closeForm()" [disabled]="saving">Volver</button>
+  </header>
+  <main>
+    <app-task-form *ngIf="showForm" [task]="editingTask" [loading]="saving" [error]="formError" (submitted)="save($event)" (cancelled)="closeForm()"></app-task-form>
+    <ng-container *ngIf="!showForm">
+      <p *ngIf="loadError" class="error-message" role="alert">{{ loadError }} <button type="button" class="btn btn-secondary" (click)="loadTasks()">Reintentar</button></p>
+      <app-task-filters (changed)="updateFilter($event)"></app-task-filters>
+      <p *ngIf="invalidFilterRange" class="error-message" role="alert">Corrige el rango de fechas para mostrar resultados.</p>
+      <app-task-board [tasks]="visibleTasks" [loading]="loading" [filtered]="filtersActive" [busyTaskId]="busyTaskId" (edit)="openEdit($event)" (remove)="requestDelete($event)" (statusMove)="moveTaskStatus($event)"></app-task-board>
+    </ng-container>
+  </main>
+</div>
