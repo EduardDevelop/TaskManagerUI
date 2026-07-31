@@ -1,8 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, timeout } from 'rxjs';
+import { map, Observable, timeout } from 'rxjs';
 import { API_CONFIG } from '../../../core/config/api.config';
 import type { CreateTaskRequest, Task, UpdateTaskRequest } from '../models/task.model';
+
+interface ApiSuccessResponse<T> {
+  readonly success: true;
+  readonly data: T;
+}
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
@@ -11,20 +16,34 @@ export class TaskService {
   private readonly tasksUrl = `${this.apiConfig.baseUrl}/tasks`;
 
   getTasks(): Observable<Task[]> {
-    return this.withTimeout(this.http.get<Task[]>(this.tasksUrl));
+    return this.withTimeout(
+      this.http
+        .get<ApiSuccessResponse<Task[]> | Task[]>(this.tasksUrl)
+        .pipe(map((response) => this.unwrapCollection(response))),
+    );
   }
 
   getTaskById(id: string): Observable<Task> {
-    return this.withTimeout(this.http.get<Task>(`${this.tasksUrl}/${encodeURIComponent(id)}`));
+    return this.withTimeout(
+      this.http
+        .get<ApiSuccessResponse<Task> | Task>(`${this.tasksUrl}/${encodeURIComponent(id)}`)
+        .pipe(map((response) => this.unwrapData(response))),
+    );
   }
 
   createTask(request: CreateTaskRequest): Observable<Task> {
-    return this.withTimeout(this.http.post<Task>(this.tasksUrl, request));
+    return this.withTimeout(
+      this.http
+        .post<ApiSuccessResponse<Task> | Task>(this.tasksUrl, request)
+        .pipe(map((response) => this.unwrapData(response))),
+    );
   }
 
   updateTask(id: string, request: UpdateTaskRequest): Observable<Task> {
     return this.withTimeout(
-      this.http.put<Task>(`${this.tasksUrl}/${encodeURIComponent(id)}`, request),
+      this.http
+        .put<ApiSuccessResponse<Task> | Task>(`${this.tasksUrl}/${encodeURIComponent(id)}`, request)
+        .pipe(map((response) => this.unwrapData(response))),
     );
   }
 
@@ -36,5 +55,17 @@ export class TaskService {
 
   private withTimeout<T>(request: Observable<T>): Observable<T> {
     return request.pipe(timeout(this.apiConfig.timeoutMs));
+  }
+
+  private unwrapCollection(response: ApiSuccessResponse<Task[]> | Task[]): Task[] {
+    const data = this.unwrapData(response);
+    return Array.isArray(data) ? data : [];
+  }
+
+  private unwrapData<T>(response: ApiSuccessResponse<T> | T): T {
+    if (response && typeof response === 'object' && 'data' in response) {
+      return response.data as T;
+    }
+    return response as T;
   }
 }

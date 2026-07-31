@@ -10,7 +10,8 @@ export interface TaskFilter {
 export const isDateRangeInvalid = (filter: TaskFilter): boolean =>
   Boolean(filter.createdFrom && filter.createdTo && filter.createdFrom > filter.createdTo);
 
-const matchesCreationDate = (createdAt: string, filter: TaskFilter): boolean => {
+const matchesCreationDate = (createdAt: string | undefined, filter: TaskFilter): boolean => {
+  if (!createdAt) return !filter.createdFrom && !filter.createdTo;
   const createdDate = createdAt.slice(0, 10);
   return (!filter.createdFrom || createdDate >= filter.createdFrom) &&
     (!filter.createdTo || createdDate <= filter.createdTo);

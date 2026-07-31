@@ -20,8 +20,10 @@ export class HttpErrorMapperService {
         return { type: 'network', message: 'No fue posible conectarse con el servidor.' };
       case 400:
         return { type: 'validation', status: 400, message: apiMessage ?? 'La información enviada no es válida.' };
+      case 401:
+        return { type: 'unknown', status: 401, message: apiMessage ?? 'No tienes autorización para realizar esta acción.' };
       case 404:
-        return { type: 'not_found', status: 404, message: 'La tarea solicitada no existe o fue eliminada.' };
+        return { type: 'not_found', status: 404, message: apiMessage ?? 'La tarea solicitada no existe o fue eliminada.' };
       case 500:
         return { type: 'server', status: 500, message: 'Ocurrió un error en el servidor. Inténtalo más tarde.' };
       default:
@@ -33,6 +35,9 @@ export class HttpErrorMapperService {
     if (typeof value === 'string' && value.length < 240) return value;
     if (value && typeof value === 'object' && 'message' in value && typeof value.message === 'string') {
       return value.message.length < 240 ? value.message : null;
+    }
+    if (value && typeof value === 'object' && 'error' in value && value.error && typeof value.error === 'object' && 'message' in value.error && typeof value.error.message === 'string') {
+      return value.error.message.length < 240 ? value.error.message : null;
     }
     return null;
   }
