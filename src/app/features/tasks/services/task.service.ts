@@ -1,13 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable, timeout } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { API_CONFIG } from '../../../core/config/api.config';
 import type { CreateTaskRequest, Task, UpdateTaskRequest } from '../models/task.model';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
   private readonly http = inject(HttpClient);
-  private readonly tasksUrl = `${environment.apiBaseUrl}/tasks`;
+  private readonly apiConfig = inject(API_CONFIG);
+  private readonly tasksUrl = `${this.apiConfig.baseUrl}/tasks`;
 
   getTasks(): Observable<Task[]> {
     return this.withTimeout(this.http.get<Task[]>(this.tasksUrl));
@@ -34,6 +35,6 @@ export class TaskService {
   }
 
   private withTimeout<T>(request: Observable<T>): Observable<T> {
-    return request.pipe(timeout(environment.requestTimeoutMs));
+    return request.pipe(timeout(this.apiConfig.timeoutMs));
   }
 }
